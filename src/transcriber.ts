@@ -4,7 +4,7 @@ import type { TranscriptionOptions, TranscriptionResult } from "./types.js";
 
 export function checkWhisperCpp(): Promise<void> {
   return new Promise((resolve, reject) => {
-    const proc = spawn("which", ["whisper-cpp"]);
+    const proc = spawn("which", ["whisper-cli"]);
     proc.on("close", (code) => {
       if (code === 0) {
         resolve();
@@ -52,7 +52,7 @@ export async function transcribe(
       "-np",  // no progress
     ];
 
-    const proc = spawn("whisper-cpp", args, {
+    const proc = spawn("whisper-cli", args, {
       stdio: ["ignore", "pipe", "pipe"],
     });
 

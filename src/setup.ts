@@ -123,9 +123,9 @@ async function main() {
     process.exit(1);
   }
 
-  // Check whisper-cpp
-  if (checkCommand("whisper-cpp")) {
-    logOk("whisper-cpp");
+  // Check whisper-cpp (binary is whisper-cli)
+  if (checkCommand("whisper-cli")) {
+    logOk("whisper-cpp (whisper-cli found)");
   } else {
     logFail("whisper-cpp not found — install with: brew install whisper-cpp");
     process.exit(1);
