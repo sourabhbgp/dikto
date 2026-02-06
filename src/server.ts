@@ -3,6 +3,7 @@ import { z } from "zod";
 import { loadConfig } from "./config.js";
 import { record, cleanupRecording } from "./recorder.js";
 import { transcribe } from "./transcriber.js";
+import { StatusIndicator } from "./indicator.js";
 
 export function createServer(): McpServer {
   const server = new McpServer({
@@ -42,11 +43,14 @@ export function createServer(): McpServer {
       };
 
       let filePath: string | undefined;
+      const indicator = new StatusIndicator();
 
       try {
+        indicator.show("listening");
         const recording = await record(recordingOptions);
         filePath = recording.filePath;
 
+        indicator.update("transcribing");
         const result = await transcribe(filePath, transcriptionOptions);
 
         return {
@@ -120,6 +124,7 @@ export function createServer(): McpServer {
           isError: true,
         };
       } finally {
+        indicator.close();
         if (filePath) {
           await cleanupRecording(filePath);
         }
