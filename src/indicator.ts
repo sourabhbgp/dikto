@@ -6,8 +6,8 @@ const JXA_SCRIPT = `
 ObjC.import("Cocoa");
 
 function createWindow() {
-  var width = 180;
-  var height = 36;
+  var width = 420;
+  var height = 60;
   var screen = $.NSScreen.mainScreen;
   var sf = screen.frame;
   var x = (sf.size.width - width) / 2;
@@ -38,11 +38,11 @@ function createWindow() {
   bg.setBoxType($.NSBoxCustom);
   bg.setFillColor($.NSColor.colorWithSRGBRedGreenBlueAlpha(0.12, 0.12, 0.14, 0.92));
   bg.setBorderWidth(0);
-  bg.setCornerRadius(height / 2);
+  bg.setCornerRadius(20);
   view.addSubview(bg);
 
   var dotSize = 8;
-  var dot = $.NSView.alloc.initWithFrame($.NSMakeRect(16, (height - dotSize) / 2, dotSize, dotSize));
+  var dot = $.NSView.alloc.initWithFrame($.NSMakeRect(16, height - 22, dotSize, dotSize));
   dot.setWantsLayer(true);
   dot.layer.setCornerRadius(dotSize / 2);
   dot.layer.setBackgroundColor($.CGColorCreateGenericRGB(1, 0.25, 0.25, 1));
@@ -50,14 +50,21 @@ function createWindow() {
 
   var labelHeight = 18;
   var label = $.NSTextField.labelWithString($("Listening..."));
-  label.setFrame($.NSMakeRect(32, (height - labelHeight) / 2, width - 48, labelHeight));
+  label.setFrame($.NSMakeRect(32, height - 26, width - 48, labelHeight));
   label.setTextColor($.NSColor.whiteColor);
   label.setFont($.NSFont.systemFontOfSizeWeight(13, 0.5));
   view.addSubview(label);
 
+  var textLabel = $.NSTextField.labelWithString($(""));
+  textLabel.setFrame($.NSMakeRect(16, 6, width - 32, 18));
+  textLabel.setTextColor($.NSColor.colorWithSRGBRedGreenBlueAlpha(0.8, 0.8, 0.8, 1.0));
+  textLabel.setFont($.NSFont.systemFontOfSizeWeight(11, 0.3));
+  textLabel.setLineBreakMode($.NSLineBreakByTruncatingHead);
+  view.addSubview(textLabel);
+
   win.orderFrontRegardless;
 
-  return { win: win, dot: dot, label: label };
+  return { win: win, dot: dot, label: label, textLabel: textLabel };
 }
 
 function applyStatus(ui, status) {
@@ -104,6 +111,12 @@ function run() {
       if (cmd === "close") { done = true; break; }
       if (cmd === "listening" || cmd === "transcribing") {
         applyStatus(ui, cmd);
+      } else if (cmd.indexOf("text:") === 0) {
+        var content = cmd.substring(5);
+        if (content.length > 50) {
+          content = "\\u2026" + content.substring(content.length - 50);
+        }
+        ui.textLabel.setStringValue($(content));
       }
     }
   }
@@ -141,6 +154,16 @@ export class StatusIndicator {
   update(status: IndicatorStatus): void {
     try {
       this.proc?.stdin?.write(status + "\n");
+    } catch {
+      // silent no-op
+    }
+  }
+
+  sendText(text: string): void {
+    try {
+      // Replace newlines with spaces to keep it on one line
+      const clean = text.replace(/[\r\n]+/g, " ");
+      this.proc?.stdin?.write("text:" + clean + "\n");
     } catch {
       // silent no-op
     }

@@ -25,3 +25,19 @@ export interface TranscriptionOptions {
 export interface TranscriptionResult {
   text: string;
 }
+
+export interface StreamTranscriptionOptions {
+  modelPath: string;
+  language: string;
+  maxDuration: number;
+  step?: number;
+  length?: number;
+  keep?: number;
+  silenceBlankCount?: number;
+}
+
+export interface StreamCallbacks {
+  onPartial?: (text: string) => void;
+  onFinal?: (text: string) => void;
+  onSilence?: () => void;
+}

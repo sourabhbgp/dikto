@@ -1,8 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { loadConfig } from "./config.js";
-import { record, cleanupRecording } from "./recorder.js";
-import { transcribe } from "./transcriber.js";
+import { streamTranscribe } from "./stream-transcriber.js";
 import { StatusIndicator } from "./indicator.js";
 
 export function createServer(): McpServer {
@@ -11,11 +10,11 @@ export function createServer(): McpServer {
     version: "1.0.0",
   });
 
-  // Register the "listen" tool
+  // Register the "listen" tool — live streaming transcription
   server.tool(
     "listen",
-    "Record audio from the microphone and transcribe it to text using whisper.cpp. " +
-      "Use this tool when the user wants to provide voice input instead of typing.",
+    "Record audio from the microphone and transcribe it to text in real-time using whisper.cpp. " +
+      "Shows live text as you speak. Use this tool when the user wants to provide voice input instead of typing.",
     {
       maxDuration: z
         .number()
@@ -28,36 +27,63 @@ export function createServer(): McpServer {
         .optional()
         .describe("Language code for transcription (default: en)"),
     },
-    async ({ maxDuration, language }) => {
+    async ({ maxDuration, language }, extra) => {
       const config = await loadConfig();
-
-      const recordingOptions = {
-        maxDuration: maxDuration ?? config.maxDuration,
-        consecutiveFramesForSilence: config.consecutiveFramesForSilence,
-        sileroVadSpeakingThreshold: config.sileroVadSpeakingThreshold,
-      };
-
-      const transcriptionOptions = {
-        modelPath: config.modelPath,
-        language: language ?? config.language,
-      };
-
-      let filePath: string | undefined;
       const indicator = new StatusIndicator();
 
       try {
         indicator.show("listening");
-        const recording = await record(recordingOptions);
-        filePath = recording.filePath;
 
-        indicator.update("transcribing");
-        const result = await transcribe(filePath, transcriptionOptions);
+        const text = await streamTranscribe(
+          {
+            modelPath: config.modelPath,
+            language: language ?? config.language,
+            maxDuration: maxDuration ?? config.maxDuration,
+          },
+          {
+            onPartial(partial) {
+              indicator.sendText(partial);
+              try {
+                void extra.sendNotification({
+                  method: "notifications/progress",
+                  params: {
+                    progressToken: "listen",
+                    progress: 0,
+                    total: 1,
+                    message: partial,
+                  },
+                });
+              } catch {
+                // notification sending is best-effort
+              }
+            },
+            onFinal(line) {
+              indicator.sendText(line);
+              try {
+                void extra.sendNotification({
+                  method: "notifications/progress",
+                  params: {
+                    progressToken: "listen",
+                    progress: 0,
+                    total: 1,
+                    message: line,
+                  },
+                });
+              } catch {
+                // notification sending is best-effort
+              }
+            },
+            onSilence() {
+              indicator.update("transcribing");
+            },
+          }
+        );
 
         return {
           content: [
             {
               type: "text" as const,
-              text: result.text,
+              text,
             },
           ],
         };
@@ -65,25 +91,12 @@ export function createServer(): McpServer {
         const message =
           error instanceof Error ? error.message : String(error);
 
-        // Provide user-friendly error messages
-        if (message.includes("speech-recorder native addon failed to load")) {
+        if (message.includes("whisper-stream is not installed")) {
           return {
             content: [
               {
                 type: "text" as const,
-                text: "speech-recorder native addon failed to load. Try reinstalling: npm rebuild speech-recorder",
-              },
-            ],
-            isError: true,
-          };
-        }
-
-        if (message.includes("whisper-cpp is not installed")) {
-          return {
-            content: [
-              {
-                type: "text" as const,
-                text: "whisper-cpp is not installed. Install it with: brew install whisper-cpp",
+                text: "whisper-stream is not installed. Install it with: brew install whisper-cpp",
               },
             ],
             isError: true,
@@ -118,16 +131,13 @@ export function createServer(): McpServer {
           content: [
             {
               type: "text" as const,
-              text: `Recording/transcription failed: ${message}`,
+              text: `Live transcription failed: ${message}`,
             },
           ],
           isError: true,
         };
       } finally {
         indicator.close();
-        if (filePath) {
-          await cleanupRecording(filePath);
-        }
       }
     }
   );

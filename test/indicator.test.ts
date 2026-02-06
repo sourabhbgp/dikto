@@ -78,6 +78,45 @@ describe("StatusIndicator", () => {
     });
   });
 
+  describe("sendText", () => {
+    it("should write text: command to stdin", () => {
+      const indicator = new StatusIndicator();
+      indicator.show("listening");
+      mockStdinWrite.mockClear();
+
+      indicator.sendText("Hello world");
+
+      expect(mockStdinWrite).toHaveBeenCalledWith("text:Hello world\n");
+    });
+
+    it("should replace newlines with spaces", () => {
+      const indicator = new StatusIndicator();
+      indicator.show("listening");
+      mockStdinWrite.mockClear();
+
+      indicator.sendText("line one\nline two\rline three");
+
+      expect(mockStdinWrite).toHaveBeenCalledWith("text:line one line two line three\n");
+    });
+
+    it("should no-op when not showing", () => {
+      const indicator = new StatusIndicator();
+      indicator.sendText("Hello");
+
+      expect(mockStdinWrite).not.toHaveBeenCalled();
+    });
+
+    it("should not throw if stdin.write throws", () => {
+      const indicator = new StatusIndicator();
+      indicator.show("listening");
+      mockStdinWrite.mockImplementationOnce(() => {
+        throw new Error("write after end");
+      });
+
+      expect(() => indicator.sendText("Hello")).not.toThrow();
+    });
+  });
+
   describe("close", () => {
     it("should write close command to stdin", () => {
       const indicator = new StatusIndicator();
