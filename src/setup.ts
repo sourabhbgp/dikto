@@ -115,20 +115,11 @@ async function main() {
     process.exit(1);
   }
 
-  // Check speech-recorder
-  try {
-    await import("speech-recorder");
-    logOk("speech-recorder (native addon loaded)");
-  } catch {
-    logFail("speech-recorder native addon failed to load — try: npm rebuild speech-recorder");
-    process.exit(1);
-  }
-
-  // Check whisper-cpp (binary is whisper-cli)
-  if (checkCommand("whisper-cli")) {
-    logOk("whisper-cpp (whisper-cli found)");
+  // Check whisper-stream (ships with whisper-cpp)
+  if (checkCommand("whisper-stream")) {
+    logOk("whisper-stream found");
   } else {
-    logFail("whisper-cpp not found — install with: brew install whisper-cpp");
+    logFail("whisper-stream not found — install with: brew install whisper-cpp");
     process.exit(1);
   }
 

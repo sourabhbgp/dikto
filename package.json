@@ -1,7 +1,7 @@
 {
   "name": "sotto",
   "version": "1.0.0",
-  "description": "Voice input for Claude Code — local speech-to-text via whisper.cpp",
+  "description": "Voice input for Claude Code — real-time local speech-to-text via whisper.cpp",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ test/",
+    "prepublishOnly": "npm run build",
     "postinstall": "echo '\n  sotto installed! Run sotto-setup to check dependencies and download the whisper model.\n'"
   },
   "keywords": [
@@ -31,7 +32,6 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "speech-recorder": "^2.1.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -39,6 +39,7 @@
     "typescript": "^5.7.3",
     "vitest": "^3.0.5"
   },
+  "os": ["darwin"],
   "engines": {
     "node": ">=18.0.0"
   }

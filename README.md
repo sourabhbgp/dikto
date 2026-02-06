@@ -1,30 +1,30 @@
 # sotto
 
-*Sotto voce* — in a soft voice.
-
 Voice input for Claude Code. Speak instead of typing.
 
-A local, open-source MCP server that records your voice, transcribes it using [whisper.cpp](https://github.com/ggerganov/whisper.cpp), and sends the text to Claude Code. Everything runs on your machine — no cloud APIs, no network calls for transcription.
+A local, open-source MCP server that streams your voice to [whisper.cpp](https://github.com/ggerganov/whisper.cpp) for real-time transcription and sends the text to Claude Code. Everything runs on your machine — no cloud APIs, no network calls.
+
+> **macOS only.** Sotto uses `osascript` and the Cocoa framework for its floating status indicator. Linux and Windows are not supported.
 
 ## How It Works
 
 ```
-You type /listen → Claude calls the "listen" tool → MCP server records audio via sox
-→ silence detected, recording stops → whisper.cpp transcribes locally → text returned
+You speak → sotto streams audio to whisper-stream for live transcription
+→ a floating indicator shows status and live text
+→ silence detected or you click stop → text returned to Claude
 → Claude treats it as your message and responds
 ```
 
 ## Prerequisites
 
-- **macOS** with Apple Silicon (Intel works too, just slower)
+- **macOS** (Apple Silicon recommended, Intel works too)
 - **Node.js** >= 18
-- **sox** — audio recording
-- **whisper-cpp** — local speech-to-text
+- **whisper-cpp** — local speech-to-text with live streaming
 
 Install system dependencies:
 
 ```bash
-brew install sox whisper-cpp
+brew install whisper-cpp
 ```
 
 ## Installation
@@ -35,7 +35,7 @@ sotto-setup
 ```
 
 The setup command will:
-1. Verify sox and whisper-cpp are installed
+1. Verify `whisper-stream` is installed (ships with whisper-cpp)
 2. Download the Whisper Base English model (~150MB) to `~/.local/share/sotto/models/`
 3. Create a default config at `~/.config/sotto/config.json`
 
@@ -45,6 +45,8 @@ Then register with Claude Code:
 claude mcp add sotto -- sotto
 ```
 
+On first use, macOS will prompt you to grant microphone access to your terminal app (Terminal, iTerm2, etc.) in **System Settings > Privacy & Security > Microphone**.
+
 ## Usage
 
 In Claude Code, type:
@@ -53,7 +55,12 @@ In Claude Code, type:
 /mcp__sotto__listen
 ```
 
-Then speak into your microphone. The recording automatically stops after 2 seconds of silence. Your speech is transcribed and sent to Claude as text.
+A floating indicator appears at the bottom of your screen showing:
+- Recording status (listening / transcribing)
+- Live transcription text as you speak
+- A stop button to end recording early
+
+Recording stops automatically after silence is detected, or when you click the stop button. Your speech is transcribed and sent to Claude as text.
 
 ## Configuration
 
@@ -64,8 +71,6 @@ Edit `~/.config/sotto/config.json`:
 | `modelPath` | `~/.local/share/sotto/models/ggml-base.en.bin` | `WHISPER_MODEL_PATH` | Path to GGML model |
 | `language` | `en` | `WHISPER_LANGUAGE` | Language code |
 | `maxDuration` | `30` | `WHISPER_MAX_DURATION` | Max recording seconds |
-| `silenceDuration` | `2` | — | Seconds of silence before auto-stop |
-| `silenceThreshold` | `3%` | — | Silence detection threshold |
 
 Environment variables take precedence over the config file.
 
@@ -73,8 +78,7 @@ Environment variables take precedence over the config file.
 
 | Problem | Solution |
 |---|---|
-| "sox is not installed" | `brew install sox` |
-| "whisper-cpp is not installed" | `brew install whisper-cpp` |
+| "whisper-stream is not installed" | `brew install whisper-cpp` |
 | "Model not found" | Run `sotto-setup` |
 | "Microphone access denied" | Grant mic access to your terminal in System Settings > Privacy & Security > Microphone |
 | No speech detected | Make sure your microphone is working and you're speaking loudly enough |
@@ -83,7 +87,7 @@ Environment variables take precedence over the config file.
 ## Development
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/sourabhbgp/sotto.git
 cd sotto
 npm install
 npm run build
