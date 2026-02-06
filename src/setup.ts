@@ -171,7 +171,7 @@ async function main() {
   console.log("  1. Register with Claude Code:");
   console.log("     claude mcp add sotto -- sotto");
   console.log();
-  console.log("  2. In Claude Code, use the /mcp__sotto__listen command");
+  console.log("  2. In Claude Code, use the /sotto:listen command");
   console.log("     to speak instead of typing.");
   console.log();
 }

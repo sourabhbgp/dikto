@@ -146,7 +146,7 @@ export function createServer(): McpServer {
     }
   );
 
-  // Register the "listen" prompt (creates the /mcp__sotto__listen slash command)
+  // Register the "listen" prompt (creates the /sotto:listen slash command)
   server.prompt(
     "listen",
     "Use voice input — records from your microphone and transcribes speech to text",

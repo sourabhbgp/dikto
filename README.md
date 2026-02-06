@@ -52,7 +52,7 @@ On first use, macOS will prompt you to grant microphone access to your terminal 
 In Claude Code, type:
 
 ```
-/mcp__sotto__listen
+/sotto:listen
 ```
 
 A floating indicator appears at the bottom of your screen showing:
