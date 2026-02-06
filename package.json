@@ -4,6 +4,9 @@
   "description": "Voice input for Claude Code — real-time local speech-to-text via whisper.cpp",
   "type": "module",
   "main": "dist/index.js",
+  "files": [
+    "dist/"
+  ],
   "bin": {
     "sotto": "dist/index.js",
     "sotto-setup": "dist/setup.js"
