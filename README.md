@@ -45,8 +45,14 @@ The setup command will:
 Then register with Claude Code:
 
 ```bash
-claude mcp add sotto -- sotto
+# Available in all projects (recommended for most users)
+claude mcp add sotto -s user -- sotto
+
+# Or, available only in the current project
+claude mcp add sotto -s local -- sotto
 ```
+
+Use **user** scope if you want voice input everywhere. Use **local** scope if you only want sotto in a specific project.
 
 On first use, macOS will prompt you to grant microphone access to your terminal app (Terminal, iTerm2, etc.) in **System Settings > Privacy & Security > Microphone**.
 
