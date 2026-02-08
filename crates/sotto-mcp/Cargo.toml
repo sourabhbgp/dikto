@@ -1,0 +1,23 @@
+[package]
+name = "sotto-mcp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sotto"
+path = "src/main.rs"
+
+[dependencies]
+sotto-core = { path = "../sotto-core" }
+rmcp = { version = "0.14", features = ["server", "transport-io", "macros", "schemars"] }
+schemars = "1"
+clap = { version = "4", features = ["derive"] }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+anyhow = { workspace = true }
+indicatif = "0.17"
