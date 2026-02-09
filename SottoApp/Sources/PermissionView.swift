@@ -52,15 +52,21 @@ struct PermissionsSettingsView: View {
                             Text("Sotto needs Accessibility permission to automatically paste transcribed text into your active app.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                            if !axGranted {
+                                Text("If permission appears enabled but isn't working, click the button to reset and re-grant.")
+                                    .font(.caption2)
+                                    .foregroundStyle(.tertiary)
+                            }
                         }
 
                         Spacer()
 
                         if !axGranted {
-                            Button("Open System Settings") {
-                                openAccessibilitySettings()
+                            Button("Grant Accessibility") {
+                                resetAndRequestAccessibility()
                             }
                             .controlSize(.small)
+                            .help("Clears any stale permission entry and re-prompts")
                         }
                     }
                     .padding(.vertical, 4)
@@ -141,7 +147,16 @@ struct PermissionsSettingsView: View {
         }
     }
 
-    private func openAccessibilitySettings() {
+    private func resetAndRequestAccessibility() {
+        // Clear any stale TCC entry (e.g. after ad-hoc re-sign changed the CDHash)
+        let bundleID = Bundle.main.bundleIdentifier ?? "dev.sotto.app"
+        let proc = Process()
+        proc.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        proc.arguments = ["reset", "Accessibility", bundleID]
+        try? proc.run()
+        proc.waitUntilExit()
+
+        // Show the system accessibility prompt
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
         AXIsProcessTrustedWithOptions(opts)
     }

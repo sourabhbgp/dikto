@@ -72,9 +72,22 @@ swiftc \
     -o "$MACOS_DIR/SottoApp" \
     "${SWIFT_FILES[@]}"
 
-# Remove extended attributes and ad-hoc code sign with hardened runtime
+# Remove extended attributes
 xattr -cr "$APP_DIR"
-codesign --force --sign - \
+
+# Try to find a stable signing identity (keeps CDHash consistent across rebuilds,
+# so accessibility permissions don't go stale)
+IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null \
+    | { grep "Apple Development" || true; } | head -1 | awk -F'"' '{print $2}')
+
+if [ -z "$IDENTITY" ]; then
+    IDENTITY="-"   # ad-hoc fallback
+    echo "No developer identity found, using ad-hoc signing"
+else
+    echo "Signing with: $IDENTITY"
+fi
+
+codesign --force --sign "$IDENTITY" \
     --options runtime \
     --entitlements "$ROOT/SottoApp/SottoApp.entitlements" \
     "$APP_DIR"
