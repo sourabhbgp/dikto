@@ -147,11 +147,13 @@ final class AppCallback: TranscriptionCallback, @unchecked Sendable {
                 appState.modelInMemory = true
                 appState.overlayController.hide()
                 appState.handleTranscriptionDone(text)
+                appState.scheduleIdleUnload()
             case let .error(message):
                 appState.isRecording = false
                 appState.isProcessing = false
                 appState.overlayController.hide()
                 appState.lastError = message
+                if appState.modelInMemory { appState.scheduleIdleUnload() }
             }
         }
     }
@@ -218,11 +220,15 @@ final class AppState: ObservableObject {
     private var holdStartTime: Date?
     private var currentShortcut: String?
     private var currentMode: ActivationMode = .hold
+    private var idleUnloadTimer: Timer?
+    private var memoryPressureSource: DispatchSourceMemoryPressure?
+    private static let idleUnloadInterval: TimeInterval = 300  // 5 minutes
 
     init() {
         loadEngine()
         setupGlobalShortcut()
         accessibilityGranted = probeAccessibilityPermission()
+        setupMemoryPressureMonitor()
     }
 
     private func setupGlobalShortcut() {
@@ -355,6 +361,8 @@ final class AppState: ObservableObject {
     }
 
     deinit {
+        idleUnloadTimer?.invalidate()
+        memoryPressureSource?.cancel()
         NotificationCenter.default.removeObserver(self)
         // Inline cleanup since deinit can't call @MainActor methods
         if let ref = pressedHandlerRef {
@@ -435,6 +443,7 @@ final class AppState: ObservableObject {
     }
 
     private func proceedWithRecording(engine: SottoEngine) {
+        cancelIdleUnload()
         let cfg = engine.getConfig()
         let listenConfig = ListenConfig(
             language: cfg.language,
@@ -523,6 +532,7 @@ final class AppState: ObservableObject {
     }
 
     func switchModel(name: String) {
+        cancelIdleUnload()
         guard let engine else { return }
         do {
             try engine.switchModel(modelName: name)
@@ -568,5 +578,49 @@ final class AppState: ObservableObject {
             let shortcut = cfg.globalShortcut ?? "option+r"
             registerHotKey(shortcut: shortcut, mode: cfg.activationMode)
         }
+    }
+
+    // MARK: - Idle Model Unloading
+
+    func scheduleIdleUnload() {
+        idleUnloadTimer?.invalidate()
+        idleUnloadTimer = Timer.scheduledTimer(
+            withTimeInterval: Self.idleUnloadInterval, repeats: false
+        ) { [weak self] _ in
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { self?.performIdleUnload() }
+            }
+        }
+    }
+
+    private func cancelIdleUnload() {
+        idleUnloadTimer?.invalidate()
+        idleUnloadTimer = nil
+    }
+
+    private func performIdleUnload() {
+        guard let engine, !isRecording, !isProcessing, engine.isModelLoaded() else { return }
+        engine.unloadModel()
+        modelInMemory = false
+        NSLog("[Sotto] Model unloaded after idle timeout")
+    }
+
+    // MARK: - Memory Pressure
+
+    private func setupMemoryPressureMonitor() {
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+        source.setEventHandler { [weak self] in
+            MainActor.assumeIsolated { self?.handleMemoryPressure() }
+        }
+        source.resume()
+        memoryPressureSource = source
+    }
+
+    private func handleMemoryPressure() {
+        guard let engine, !isRecording, !isProcessing, engine.isModelLoaded() else { return }
+        engine.unloadModel()
+        modelInMemory = false
+        cancelIdleUnload()
+        NSLog("[Sotto] Model unloaded due to system memory pressure")
     }
 }

@@ -60,11 +60,7 @@ struct MenuBarView: View {
                     .foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(appState.config?.modelName ?? "No model")
-                    if appState.modelInMemory {
-                        Text("Loaded")
-                            .font(.caption)
-                            .foregroundStyle(.green)
-                    }
+                    modelMemoryStatus
                 }
             }
             .font(.callout)
@@ -148,5 +144,32 @@ struct MenuBarView: View {
             return "No model downloaded"
         }
         return ""
+    }
+
+    @ViewBuilder
+    private var modelMemoryStatus: some View {
+        if appState.modelInMemory {
+            Text("Loaded\(modelSizeString)")
+                .font(.caption)
+                .foregroundStyle(.green)
+        } else if appState.modelAvailable {
+            Text("Not loaded")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        } else {
+            Text("Not downloaded")
+                .font(.caption)
+                .foregroundStyle(.orange)
+        }
+    }
+
+    private var modelSizeString: String {
+        guard let modelName = appState.config?.modelName,
+              let model = appState.models.first(where: { $0.name == modelName })
+        else { return "" }
+        if model.sizeMb >= 1024 {
+            return String(format: " (~%.1f GB)", Double(model.sizeMb) / 1024.0)
+        }
+        return " (~\(model.sizeMb) MB)"
     }
 }
