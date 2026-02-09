@@ -9,8 +9,13 @@ on:
 jobs:
   audit:
     runs-on: ubuntu-latest
+    env:
+      RUSTUP_TOOLCHAIN: stable  # Override rust-toolchain.toml for audit tools
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Run cargo audit
         uses: rustsec/audit-check@v2.0.0

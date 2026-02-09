@@ -587,8 +587,9 @@ final class AppState: ObservableObject {
         idleUnloadTimer = Timer.scheduledTimer(
             withTimeInterval: Self.idleUnloadInterval, repeats: false
         ) { [weak self] _ in
+            guard let self else { return }
             DispatchQueue.main.async {
-                MainActor.assumeIsolated { self?.performIdleUnload() }
+                MainActor.assumeIsolated { self.performIdleUnload() }
             }
         }
     }
