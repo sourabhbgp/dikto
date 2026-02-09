@@ -4,7 +4,8 @@ Voice-to-text for macOS. Records speech and transcribes it locally — no cloud 
 
 > macOS 14+ (Sonoma) &middot; Apple Silicon
 
-[![CI](https://github.com/sourabhbgp/dikto/actions/workflows/ci.yml/badge.svg)](https://github.com/sourabhbgp/dikto/actions/workflows/ci.yml)
+[![Build](https://github.com/sourabhbgp/dikto/actions/workflows/build.yml/badge.svg)](https://github.com/sourabhbgp/dikto/actions/workflows/build.yml)
+[![Test](https://github.com/sourabhbgp/dikto/actions/workflows/test.yml/badge.svg)](https://github.com/sourabhbgp/dikto/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## Install
