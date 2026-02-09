@@ -1,10 +1,10 @@
-use sotto_core::config::{self, SottoConfig};
-use sotto_core::models;
+use dikto_core::config::{self, DiktoConfig};
+use dikto_core::models;
 
 /// Run the setup command: download a model and create config.
 /// If `model_name` is None, downloads the default model (parakeet-tdt-0.6b-v2).
 pub async fn run_setup(model_name: Option<&str>) -> anyhow::Result<()> {
-    eprintln!("Sotto Setup");
+    eprintln!("Dikto Setup");
     eprintln!("===========\n");
 
     // Ensure directories exist
@@ -16,7 +16,7 @@ pub async fn run_setup(model_name: Option<&str>) -> anyhow::Result<()> {
     // Create default config if it doesn't exist
     let config_path = config::config_path();
     if !config_path.exists() {
-        let cfg = SottoConfig::default();
+        let cfg = DiktoConfig::default();
         config::save_config(&cfg)?;
         eprintln!("Created config at {}", config_path.display());
     } else {
@@ -79,8 +79,8 @@ pub async fn run_setup(model_name: Option<&str>) -> anyhow::Result<()> {
         eprintln!("Model saved to {}", path.display());
     }
 
-    eprintln!("\nSetup complete! You can now use sotto.");
-    eprintln!("  Desktop app: open /Applications/Sotto.app");
+    eprintln!("\nSetup complete! You can now use dikto.");
+    eprintln!("  Desktop app: open /Applications/Dikto.app");
 
     Ok(())
 }

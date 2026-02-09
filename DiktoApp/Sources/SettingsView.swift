@@ -143,7 +143,7 @@ struct GeneralSettingsView: View {
         VStack(spacing: 0) {
             Form {
                 Section {
-                    Toggle("Launch Sotto at login", isOn: $launchAtLogin)
+                    Toggle("Launch Dikto at login", isOn: $launchAtLogin)
                         .onChange(of: launchAtLogin) { guard loaded else { return }; setLaunchAtLogin(launchAtLogin) }
                 }
 
@@ -358,14 +358,14 @@ struct GeneralSettingsView: View {
                 try SMAppService.mainApp.unregister()
             }
         } catch {
-            NSLog("[Sotto] Launch at login error: \(error)")
+            NSLog("[Dikto] Launch at login error: \(error)")
             launchAtLogin = SMAppService.mainApp.status == .enabled
         }
     }
 
     private func saveSettings() {
         guard let cfg = appState.config else { return }
-        let newConfig = SottoConfig(
+        let newConfig = DiktoConfig(
             modelName: cfg.modelName,
             language: selectedLanguage,
             maxDuration: UInt32(maxDuration),
@@ -455,7 +455,7 @@ struct ModelsSettingsView: View {
                 Text("Or via terminal:")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                Text("sotto --setup --model <name>")
+                Text("dikto --setup --model <name>")
                     .font(.caption.monospaced())
                     .foregroundStyle(.secondary)
                 Spacer()

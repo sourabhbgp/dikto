@@ -1,12 +1,12 @@
-# Sotto — build orchestration for Rust core + Swift bindings + macOS app
+# Dikto — build orchestration for Rust core + Swift bindings + macOS app
 
 CARGO        = $(HOME)/.cargo/bin/cargo
-RUST_LIB     = target/release/libsotto_core.a
-BINDINGS_DIR = SottoApp/Generated
-SWIFT_FILE   = $(BINDINGS_DIR)/sotto_core.swift
-HEADER_FILE  = $(BINDINGS_DIR)/sotto_coreFFI.h
-MODULE_MAP   = $(BINDINGS_DIR)/sotto_coreFFI.modulemap
-UDLLIB       = target/release/libsotto_core.dylib
+RUST_LIB     = target/release/libdikto_core.a
+BINDINGS_DIR = DiktoApp/Generated
+SWIFT_FILE   = $(BINDINGS_DIR)/dikto_core.swift
+HEADER_FILE  = $(BINDINGS_DIR)/dikto_coreFFI.h
+MODULE_MAP   = $(BINDINGS_DIR)/dikto_coreFFI.modulemap
+UDLLIB       = target/release/libdikto_core.dylib
 
 .PHONY: all build-rust generate-bindings build-app clean test clippy
 
@@ -14,7 +14,7 @@ all: build-rust generate-bindings build-app
 
 ## Build the Rust static library (release, with Metal)
 build-rust:
-	$(CARGO) build --release --package sotto-core
+	$(CARGO) build --release --package dikto-core
 
 ## Generate Swift bindings from the compiled dylib
 generate-bindings: build-rust

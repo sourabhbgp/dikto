@@ -31,9 +31,9 @@ fn is_valid_shortcut(shortcut: &str) -> bool {
     modifier_count >= 1 && key_count == 1
 }
 
-/// Configuration for Sotto, backward-compatible with v1 paths.
+/// Configuration for Dikto, backward-compatible with v1 paths.
 #[derive(Debug, Clone, Serialize, Deserialize, uniffi::Record)]
-pub struct SottoConfig {
+pub struct DiktoConfig {
     #[serde(default = "default_model_name")]
     pub model_name: String,
     #[serde(default = "default_language")]
@@ -82,7 +82,7 @@ fn default_global_shortcut() -> Option<String> {
     Some("option+r".to_string())
 }
 
-impl Default for SottoConfig {
+impl Default for DiktoConfig {
     fn default() -> Self {
         Self {
             model_name: default_model_name(),
@@ -98,7 +98,7 @@ impl Default for SottoConfig {
     }
 }
 
-impl SottoConfig {
+impl DiktoConfig {
     /// Clamp all numeric fields to safe ranges and validate shortcut.
     pub fn validate(&mut self) {
         self.max_duration = self.max_duration.clamp(1, 120);
@@ -119,26 +119,26 @@ impl SottoConfig {
     }
 }
 
-/// Returns the config directory path: ~/.config/sotto/
+/// Returns the config directory path: ~/.config/dikto/
 pub fn config_dir() -> PathBuf {
     dirs::home_dir()
         .expect("Cannot determine home directory")
-        .join(".config/sotto")
+        .join(".config/dikto")
 }
 
-/// Returns the data directory path: ~/.local/share/sotto/
+/// Returns the data directory path: ~/.local/share/dikto/
 pub fn data_dir() -> PathBuf {
     dirs::home_dir()
         .expect("Cannot determine home directory")
-        .join(".local/share/sotto")
+        .join(".local/share/dikto")
 }
 
-/// Returns the models directory path: ~/.local/share/sotto/models/
+/// Returns the models directory path: ~/.local/share/dikto/models/
 pub fn models_dir() -> PathBuf {
     data_dir().join("models")
 }
 
-/// Returns the config file path: ~/.config/sotto/config.json
+/// Returns the config file path: ~/.config/dikto/config.json
 pub fn config_path() -> PathBuf {
     config_dir().join("config.json")
 }
@@ -146,7 +146,7 @@ pub fn config_path() -> PathBuf {
 /// Load config from disk, with env var overrides for backward compatibility.
 /// Migration: existing config files without `activation_mode` get Toggle (preserves behavior).
 /// New installs get Hold (push-to-talk).
-pub fn load_config() -> SottoConfig {
+pub fn load_config() -> DiktoConfig {
     let path = config_path();
     let mut config = if path.exists() {
         match std::fs::read_to_string(&path) {
@@ -157,7 +157,7 @@ pub fn load_config() -> SottoConfig {
                     .and_then(|v| v.get("activation_mode").cloned())
                     .is_some();
 
-                match serde_json::from_str::<SottoConfig>(&contents) {
+                match serde_json::from_str::<DiktoConfig>(&contents) {
                     Ok(mut c) => {
                         // Migration: existing config without activation_mode → Toggle
                         if !has_activation_mode {
@@ -167,27 +167,27 @@ pub fn load_config() -> SottoConfig {
                     }
                     Err(e) => {
                         warn!("Failed to parse config at {}: {e}", path.display());
-                        SottoConfig::default()
+                        DiktoConfig::default()
                     }
                 }
             }
             Err(e) => {
                 warn!("Failed to read config at {}: {e}", path.display());
-                SottoConfig::default()
+                DiktoConfig::default()
             }
         }
     } else {
-        SottoConfig::default()
+        DiktoConfig::default()
     };
 
     // Env var overrides (backward-compatible with v1)
-    if let Ok(v) = std::env::var("SOTTO_MODEL") {
+    if let Ok(v) = std::env::var("DIKTO_MODEL") {
         config.model_name = v;
     }
-    if let Ok(v) = std::env::var("SOTTO_LANGUAGE") {
+    if let Ok(v) = std::env::var("DIKTO_LANGUAGE") {
         config.language = v;
     }
-    if let Ok(v) = std::env::var("SOTTO_MAX_DURATION") {
+    if let Ok(v) = std::env::var("DIKTO_MAX_DURATION") {
         if let Ok(n) = v.parse() {
             config.max_duration = n;
         }
@@ -198,7 +198,7 @@ pub fn load_config() -> SottoConfig {
 }
 
 /// Save config to disk. Values are validated (clamped) before saving.
-pub fn save_config(config: &SottoConfig) -> Result<(), std::io::Error> {
+pub fn save_config(config: &DiktoConfig) -> Result<(), std::io::Error> {
     let mut config = config.clone();
     config.validate();
     let path = config_path();
@@ -215,7 +215,7 @@ mod tests {
 
     #[test]
     fn test_default_config() {
-        let config = SottoConfig::default();
+        let config = DiktoConfig::default();
         assert_eq!(config.model_name, "parakeet-tdt-0.6b-v2");
         assert_eq!(config.language, "en");
         assert_eq!(config.max_duration, 30);
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn test_config_deserialize() {
         let json = r#"{"model_name":"tiny.en","language":"fr","max_duration":60}"#;
-        let config: SottoConfig = serde_json::from_str(json).unwrap();
+        let config: DiktoConfig = serde_json::from_str(json).unwrap();
         assert_eq!(config.model_name, "tiny.en");
         assert_eq!(config.language, "fr");
         assert_eq!(config.max_duration, 60);
@@ -245,7 +245,7 @@ mod tests {
         let json = r#"{"model_name":"parakeet-tdt-0.6b-v2","language":"en","auto_paste":true}"#;
         let raw: serde_json::Value = serde_json::from_str(json).unwrap();
         let has_activation_mode = raw.get("activation_mode").is_some();
-        let mut config: SottoConfig = serde_json::from_str(json).unwrap();
+        let mut config: DiktoConfig = serde_json::from_str(json).unwrap();
         if !has_activation_mode {
             config.activation_mode = ActivationMode::Toggle;
         }
@@ -256,11 +256,11 @@ mod tests {
     #[test]
     fn test_activation_mode_serialization() {
         let json = r#"{"activation_mode":"hold"}"#;
-        let config: SottoConfig = serde_json::from_str(json).unwrap();
+        let config: DiktoConfig = serde_json::from_str(json).unwrap();
         assert_eq!(config.activation_mode, ActivationMode::Hold);
 
         let json = r#"{"activation_mode":"toggle"}"#;
-        let config: SottoConfig = serde_json::from_str(json).unwrap();
+        let config: DiktoConfig = serde_json::from_str(json).unwrap();
         assert_eq!(config.activation_mode, ActivationMode::Toggle);
     }
 
@@ -277,7 +277,7 @@ mod tests {
 
     #[test]
     fn test_validate_resets_invalid_shortcut() {
-        let mut config = SottoConfig::default();
+        let mut config = DiktoConfig::default();
         config.global_shortcut = Some("just-a-key".to_string());
         config.validate();
         assert_eq!(config.global_shortcut, Some("option+r".to_string()));
@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn test_validate_resets_none_shortcut() {
-        let mut config = SottoConfig::default();
+        let mut config = DiktoConfig::default();
         config.global_shortcut = None;
         config.validate();
         assert_eq!(config.global_shortcut, Some("option+r".to_string()));
@@ -294,7 +294,7 @@ mod tests {
     #[test]
     fn test_models_dir() {
         let dir = models_dir();
-        assert!(dir.to_string_lossy().contains("sotto"));
+        assert!(dir.to_string_lossy().contains("dikto"));
         assert!(dir.to_string_lossy().contains("models"));
     }
 }

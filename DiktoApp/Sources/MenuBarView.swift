@@ -35,7 +35,7 @@ struct MenuBarView: View {
         VStack(alignment: .leading, spacing: 2) {
             // Header: bold title + right-aligned status
             HStack {
-                Text("Sotto")
+                Text("Dikto")
                     .fontWeight(.bold)
                 Spacer()
                 if !statusText.isEmpty {

@@ -8,7 +8,7 @@ pub mod transcribe;
 pub mod vad;
 
 use audio::{AudioCapture, AudioCaptureConfig, AudioError};
-use config::SottoConfig;
+use config::DiktoConfig;
 use engine::{AsrEngine, AsrSession, LoadedEngine};
 use models::{ModelBackend, ModelError};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -21,9 +21,9 @@ use vad::{VadConfig, VadError, VadEvent, VadProcessor};
 /// Old Whisper model names (v1) that should be auto-migrated to Parakeet.
 const OLD_WHISPER_MODEL_NAMES: &[&str] = &["tiny.en", "base.en", "small.en", "medium.en"];
 
-/// Errors from the Sotto engine.
+/// Errors from the Dikto engine.
 #[derive(Debug, Error, uniffi::Error)]
-pub enum SottoError {
+pub enum DiktoError {
     #[error("Audio error: {0}")]
     Audio(String),
     #[error("VAD error: {0}")]
@@ -32,7 +32,7 @@ pub enum SottoError {
     Transcribe(String),
     #[error("Model error: {0}")]
     Model(String),
-    #[error("No model loaded. Run: sotto --setup")]
+    #[error("No model loaded. Run: dikto --setup")]
     NoModel,
     #[error("Already recording")]
     AlreadyRecording,
@@ -40,24 +40,24 @@ pub enum SottoError {
     Config(String),
 }
 
-impl From<AudioError> for SottoError {
+impl From<AudioError> for DiktoError {
     fn from(e: AudioError) -> Self {
-        SottoError::Audio(e.to_string())
+        DiktoError::Audio(e.to_string())
     }
 }
-impl From<VadError> for SottoError {
+impl From<VadError> for DiktoError {
     fn from(e: VadError) -> Self {
-        SottoError::Vad(e.to_string())
+        DiktoError::Vad(e.to_string())
     }
 }
-impl From<TranscribeError> for SottoError {
+impl From<TranscribeError> for DiktoError {
     fn from(e: TranscribeError) -> Self {
-        SottoError::Transcribe(e.to_string())
+        DiktoError::Transcribe(e.to_string())
     }
 }
-impl From<ModelError> for SottoError {
+impl From<ModelError> for DiktoError {
     fn from(e: ModelError) -> Self {
-        SottoError::Model(e.to_string())
+        DiktoError::Model(e.to_string())
     }
 }
 
@@ -108,8 +108,8 @@ impl Default for ListenConfig {
     }
 }
 
-impl From<&SottoConfig> for ListenConfig {
-    fn from(cfg: &SottoConfig) -> Self {
+impl From<&DiktoConfig> for ListenConfig {
+    fn from(cfg: &DiktoConfig) -> Self {
         Self {
             language: cfg.language.clone(),
             max_duration: cfg.max_duration,
@@ -155,24 +155,24 @@ pub struct LanguageInfo {
     pub name: String,
 }
 
-/// Inner state of SottoEngine, behind a Mutex for UniFFI compatibility.
-struct SottoEngineInner {
+/// Inner state of DiktoEngine, behind a Mutex for UniFFI compatibility.
+struct DiktoEngineInner {
     /// Shared engine holder — None when no model is loaded in RAM.
     /// Arc allows sharing with pipeline threads for lazy loading.
     engine: Arc<Mutex<Option<LoadedEngine>>>,
-    config: SottoConfig,
+    config: DiktoConfig,
     recording: Arc<AtomicBool>,
 }
 
-/// The main Sotto engine. Models are loaded lazily into RAM on first recording.
+/// The main Dikto engine. Models are loaded lazily into RAM on first recording.
 #[derive(uniffi::Object)]
-pub struct SottoEngine {
-    inner: Mutex<SottoEngineInner>,
+pub struct DiktoEngine {
+    inner: Mutex<DiktoEngineInner>,
 }
 
 #[uniffi::export]
-impl SottoEngine {
-    /// Create a new SottoEngine. Does NOT load any model into RAM.
+impl DiktoEngine {
+    /// Create a new DiktoEngine. Does NOT load any model into RAM.
     /// Auto-migrates old v1 Whisper model configs to Parakeet.
     #[uniffi::constructor]
     #[allow(clippy::new_without_default)]
@@ -192,7 +192,7 @@ impl SottoEngine {
         }
 
         Self {
-            inner: Mutex::new(SottoEngineInner {
+            inner: Mutex::new(DiktoEngineInner {
                 engine: Arc::new(Mutex::new(None)),
                 config,
                 recording: Arc::new(AtomicBool::new(false)),
@@ -202,21 +202,21 @@ impl SottoEngine {
 
     /// Explicitly load the configured model into RAM.
     /// Optional — start_listening() will lazy-load if needed.
-    pub fn load_model(&self) -> Result<(), SottoError> {
+    pub fn load_model(&self) -> Result<(), DiktoError> {
         let inner = self.inner.lock()
-            .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
+            .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
         let model_name = inner.config.model_name.clone();
         let model_info =
-            models::find_model(&model_name).ok_or(SottoError::NoModel)?;
-        let path = models::model_path(&model_name).ok_or(SottoError::NoModel)?;
+            models::find_model(&model_name).ok_or(DiktoError::NoModel)?;
+        let path = models::model_path(&model_name).ok_or(DiktoError::NoModel)?;
 
         if !models::is_model_downloaded(&model_name) {
-            return Err(SottoError::NoModel);
+            return Err(DiktoError::NoModel);
         }
 
         let asr = AsrEngine::load(model_info.backend, &path)?;
         *inner.engine.lock()
-            .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))? = Some(LoadedEngine {
+            .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))? = Some(LoadedEngine {
             model_name: model_name.clone(),
             engine: asr,
         });
@@ -237,18 +237,18 @@ impl SottoEngine {
 
     /// Switch to a different model. Unloads the current model from RAM.
     /// The new model will be loaded lazily on next recording.
-    pub fn switch_model(&self, model_name: String) -> Result<(), SottoError> {
+    pub fn switch_model(&self, model_name: String) -> Result<(), DiktoError> {
         let mut inner = self.inner.lock()
-            .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
+            .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
 
         if inner.recording.load(Ordering::Relaxed) {
-            return Err(SottoError::AlreadyRecording);
+            return Err(DiktoError::AlreadyRecording);
         }
 
         // Verify model exists and is downloaded
-        let _ = models::find_model(&model_name).ok_or(SottoError::NoModel)?;
+        let _ = models::find_model(&model_name).ok_or(DiktoError::NoModel)?;
         if !models::is_model_downloaded(&model_name) {
-            return Err(SottoError::NoModel);
+            return Err(DiktoError::NoModel);
         }
 
         // Unload old model from RAM
@@ -258,7 +258,7 @@ impl SottoEngine {
 
         // Save new model choice
         inner.config.model_name = model_name.clone();
-        config::save_config(&inner.config).map_err(|e| SottoError::Config(e.to_string()))?;
+        config::save_config(&inner.config).map_err(|e| DiktoError::Config(e.to_string()))?;
         info!("Switched to model '{}' (will load on next recording)", model_name);
         Ok(())
     }
@@ -270,25 +270,25 @@ impl SottoEngine {
         &self,
         listen_config: ListenConfig,
         callback: Arc<dyn TranscriptionCallback>,
-    ) -> Result<Arc<SessionHandle>, SottoError> {
+    ) -> Result<Arc<SessionHandle>, DiktoError> {
         let inner = self.inner.lock()
-            .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
+            .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
 
         if inner.recording.load(Ordering::Relaxed) {
-            return Err(SottoError::AlreadyRecording);
+            return Err(DiktoError::AlreadyRecording);
         }
 
         // Verify model is available on disk
         let model_name = inner.config.model_name.clone();
         let model_info =
-            models::find_model(&model_name).ok_or(SottoError::NoModel)?;
+            models::find_model(&model_name).ok_or(DiktoError::NoModel)?;
         if !models::is_model_downloaded(&model_name) {
-            return Err(SottoError::NoModel);
+            return Err(DiktoError::NoModel);
         }
 
         let engine_holder = inner.engine.clone();
         let backend = model_info.backend;
-        let model_path = models::model_path(&model_name).ok_or(SottoError::NoModel)?;
+        let model_path = models::model_path(&model_name).ok_or(DiktoError::NoModel)?;
 
         let stop_flag = Arc::new(AtomicBool::new(false));
         let handle = Arc::new(SessionHandle {
@@ -310,7 +310,7 @@ impl SottoEngine {
                 // Lazy-load model if needed
                 let needs_load = {
                     let guard = engine_holder.lock()
-                        .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
+                        .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
                     !matches!(&*guard, Some(loaded) if loaded.model_name == model_name)
                 };
 
@@ -322,7 +322,7 @@ impl SottoEngine {
                     match AsrEngine::load(backend, &model_path) {
                         Ok(asr) => {
                             let mut guard = engine_holder.lock()
-                                .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
+                                .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
                             *guard = Some(LoadedEngine {
                                 model_name: model_name.clone(),
                                 engine: asr,
@@ -343,8 +343,8 @@ impl SottoEngine {
                 let transcribe_config = TranscribeConfig { language };
                 let session = {
                     let guard = engine_holder.lock()
-                        .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
-                    let loaded = guard.as_ref().ok_or(SottoError::NoModel)?;
+                        .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
+                    let loaded = guard.as_ref().ok_or(DiktoError::NoModel)?;
                     loaded.engine.create_session(transcribe_config)
                 };
 
@@ -375,7 +375,7 @@ impl SottoEngine {
                     }
                 }
 
-                Ok::<(), SottoError>(())
+                Ok::<(), DiktoError>(())
             }));
 
             if let Err(_panic) = result {
@@ -390,17 +390,17 @@ impl SottoEngine {
     }
 
     /// Get a copy of the current config.
-    pub fn get_config(&self) -> SottoConfig {
+    pub fn get_config(&self) -> DiktoConfig {
         self.inner.lock().ok()
             .map(|g| g.config.clone())
             .unwrap_or_default()
     }
 
     /// Update config and save.
-    pub fn update_config(&self, config: SottoConfig) -> Result<(), SottoError> {
+    pub fn update_config(&self, config: DiktoConfig) -> Result<(), DiktoError> {
         let mut inner = self.inner.lock()
-            .map_err(|e| SottoError::Config(format!("Lock poisoned: {e}")))?;
-        config::save_config(&config).map_err(|e| SottoError::Config(e.to_string()))?;
+            .map_err(|e| DiktoError::Config(format!("Lock poisoned: {e}")))?;
+        config::save_config(&config).map_err(|e| DiktoError::Config(e.to_string()))?;
         inner.config = config;
         Ok(())
     }
@@ -427,10 +427,10 @@ impl SottoEngine {
         &self,
         model_name: String,
         callback: Arc<dyn DownloadProgressCallback>,
-    ) -> Result<(), SottoError> {
+    ) -> Result<(), DiktoError> {
         // Verify model exists
         let _ = models::find_model(&model_name).ok_or_else(|| {
-            SottoError::Model(format!("Unknown model: {model_name}"))
+            DiktoError::Model(format!("Unknown model: {model_name}"))
         })?;
 
         let name = model_name.clone();
@@ -524,7 +524,7 @@ fn run_pipeline(
     max_duration: u32,
     silence_duration_ms: u32,
     speech_threshold: f32,
-) -> Result<String, SottoError> {
+) -> Result<String, DiktoError> {
     callback.on_state_change(RecordingState::Listening);
 
     // Start audio capture

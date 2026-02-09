@@ -25,7 +25,7 @@ struct PermissionsSettingsView: View {
                                     .fontWeight(.medium)
                                 statusBadge(granted: micStatus == .authorized)
                             }
-                            Text("Sotto needs microphone access to hear your voice and transcribe it into text.")
+                            Text("Dikto needs microphone access to hear your voice and transcribe it into text.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -49,7 +49,7 @@ struct PermissionsSettingsView: View {
                                     .fontWeight(.medium)
                                 statusBadge(granted: axGranted)
                             }
-                            Text("Sotto needs Accessibility permission to automatically paste transcribed text into your active app.")
+                            Text("Dikto needs Accessibility permission to automatically paste transcribed text into your active app.")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                             if !axGranted {
@@ -149,7 +149,7 @@ struct PermissionsSettingsView: View {
 
     private func resetAndRequestAccessibility() {
         // Clear any stale TCC entry (e.g. after ad-hoc re-sign changed the CDHash)
-        let bundleID = Bundle.main.bundleIdentifier ?? "dev.sotto.app"
+        let bundleID = Bundle.main.bundleIdentifier ?? "dev.dikto.app"
         let proc = Process()
         proc.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
         proc.arguments = ["reset", "Accessibility", bundleID]

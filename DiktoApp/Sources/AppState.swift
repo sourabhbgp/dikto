@@ -5,8 +5,8 @@ import Foundation
 import SwiftUI
 
 extension Notification.Name {
-    static let sottoHotKeyPressed = Notification.Name("sottoHotKeyPressed")
-    static let sottoHotKeyReleased = Notification.Name("sottoHotKeyReleased")
+    static let diktoHotKeyPressed = Notification.Name("diktoHotKeyPressed")
+    static let diktoHotKeyReleased = Notification.Name("diktoHotKeyReleased")
 }
 
 // MARK: - Carbon HotKey Helpers
@@ -202,7 +202,7 @@ final class AppState: ObservableObject {
     @Published var finalText = ""
     @Published var lastError: String?
     @Published var models: [ModelInfoRecord] = []
-    @Published var config: SottoConfig?
+    @Published var config: DiktoConfig?
     @Published var modelAvailable = false
     @Published var modelInMemory = false
     @Published var downloadProgress: [String: Double] = [:]
@@ -210,7 +210,7 @@ final class AppState: ObservableObject {
     @Published var accessibilityGranted = false
     @Published var selectedSettingsTab: SettingsTab = .general
     let overlayController = RecordingOverlayController()
-    private var engine: SottoEngine?
+    private var engine: DiktoEngine?
     private var sessionHandle: SessionHandle?
     private var activeCallback: AppCallback?
     private var hotKeyRef: EventHotKeyRef?
@@ -238,7 +238,7 @@ final class AppState: ObservableObject {
 
         // Listen for pressed notification
         NotificationCenter.default.addObserver(
-            forName: .sottoHotKeyPressed,
+            forName: .diktoHotKeyPressed,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -249,7 +249,7 @@ final class AppState: ObservableObject {
 
         // Listen for released notification
         NotificationCenter.default.addObserver(
-            forName: .sottoHotKeyReleased,
+            forName: .diktoHotKeyReleased,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -263,14 +263,14 @@ final class AppState: ObservableObject {
         unregisterHotKey()
 
         guard let hotKey = parseCarbonHotKey(from: shortcut) else {
-            NSLog("[Sotto] Failed to parse shortcut: \(shortcut)")
+            NSLog("[Dikto] Failed to parse shortcut: \(shortcut)")
             return
         }
 
         currentShortcut = shortcut
         currentMode = mode
 
-        let hotKeyID = EventHotKeyID(signature: OSType(0x534F5454), id: 1) // "SOTT"
+        let hotKeyID = EventHotKeyID(signature: OSType(0x44494B54), id: 1) // "DIKT"
         var ref: EventHotKeyRef?
         let status = RegisterEventHotKey(
             hotKey.keyCode,
@@ -283,7 +283,7 @@ final class AppState: ObservableObject {
         if status == noErr {
             hotKeyRef = ref
         } else {
-            NSLog("[Sotto] Failed to register global hotkey: \(status)")
+            NSLog("[Dikto] Failed to register global hotkey: \(status)")
             return
         }
 
@@ -292,7 +292,7 @@ final class AppState: ObservableObject {
         var pressedRef: EventHandlerRef?
         InstallEventHandler(GetApplicationEventTarget(), { _, event, _ -> OSStatus in
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .sottoHotKeyPressed, object: nil)
+                NotificationCenter.default.post(name: .diktoHotKeyPressed, object: nil)
             }
             return noErr
         }, 1, &pressedEventType, nil, &pressedRef)
@@ -304,14 +304,14 @@ final class AppState: ObservableObject {
             var releasedRef: EventHandlerRef?
             InstallEventHandler(GetApplicationEventTarget(), { _, event, _ -> OSStatus in
                 DispatchQueue.main.async {
-                    NotificationCenter.default.post(name: .sottoHotKeyReleased, object: nil)
+                    NotificationCenter.default.post(name: .diktoHotKeyReleased, object: nil)
                 }
                 return noErr
             }, 1, &releasedEventType, nil, &releasedRef)
             releasedHandlerRef = releasedRef
         }
 
-        NSLog("[Sotto] Registered hotkey: \(shortcut) mode: \(mode == .hold ? "hold" : "toggle")")
+        NSLog("[Dikto] Registered hotkey: \(shortcut) mode: \(mode == .hold ? "hold" : "toggle")")
     }
 
     private func unregisterHotKey() {
@@ -377,15 +377,15 @@ final class AppState: ObservableObject {
     }
 
     private func loadEngine() {
-        NSLog("[Sotto] Creating SottoEngine...")
-        let engine = SottoEngine()
+        NSLog("[Dikto] Creating DiktoEngine...")
+        let engine = DiktoEngine()
         self.engine = engine
         self.modelAvailable = engine.isModelAvailable()
         self.modelInMemory = engine.isModelLoaded()
         refreshModels()
         refreshConfig()
         refreshLanguages()
-        NSLog("[Sotto] Engine ready. Model available on disk: \(modelAvailable)")
+        NSLog("[Dikto] Engine ready. Model available on disk: \(modelAvailable)")
     }
 
     func refreshModels() {
@@ -442,7 +442,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    private func proceedWithRecording(engine: SottoEngine) {
+    private func proceedWithRecording(engine: DiktoEngine) {
         cancelIdleUnload()
         let cfg = engine.getConfig()
         let listenConfig = ListenConfig(
@@ -496,7 +496,7 @@ final class AppState: ObservableObject {
         if wantCopy || wantPaste {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(cleaned, forType: .string)
-            NSLog("[Sotto] Copied to clipboard")
+            NSLog("[Dikto] Copied to clipboard")
         }
 
         if wantPaste {
@@ -560,7 +560,7 @@ final class AppState: ObservableObject {
         }
     }
 
-    func updateConfig(_ newConfig: SottoConfig) {
+    func updateConfig(_ newConfig: DiktoConfig) {
         guard let engine else { return }
 
         // Detect if hotkey settings changed
@@ -604,7 +604,7 @@ final class AppState: ObservableObject {
         guard let engine, !isRecording, !isProcessing, engine.isModelLoaded() else { return }
         engine.unloadModel()
         modelInMemory = false
-        NSLog("[Sotto] Model unloaded after idle timeout")
+        NSLog("[Dikto] Model unloaded after idle timeout")
     }
 
     // MARK: - Memory Pressure
@@ -623,6 +623,6 @@ final class AppState: ObservableObject {
         engine.unloadModel()
         modelInMemory = false
         cancelIdleUnload()
-        NSLog("[Sotto] Model unloaded due to system memory pressure")
+        NSLog("[Dikto] Model unloaded due to system memory pressure")
     }
 }

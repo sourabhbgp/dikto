@@ -1,21 +1,21 @@
 #!/bin/bash
-# Build the Sotto macOS menu bar app
-# Compiles Swift sources + links against libsotto_core.a
-# ONNX Runtime is statically linked into libsotto_core.a (no dylib needed)
+# Build the Dikto macOS menu bar app
+# Compiles Swift sources + links against libdikto_core.a
+# ONNX Runtime is statically linked into libdikto_core.a (no dylib needed)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$ROOT/build"
-APP_DIR="$BUILD_DIR/Sotto.app"
+APP_DIR="$BUILD_DIR/Dikto.app"
 CONTENTS="$APP_DIR/Contents"
 MACOS_DIR="$CONTENTS/MacOS"
 
-GENERATED="$ROOT/SottoApp/Generated"
-SOURCES="$ROOT/SottoApp/Sources"
-RUST_LIB="$ROOT/target/release/libsotto_core.a"
+GENERATED="$ROOT/DiktoApp/Generated"
+SOURCES="$ROOT/DiktoApp/Sources"
+RUST_LIB="$ROOT/target/release/libdikto_core.a"
 
 # Ensure bindings exist
-if [ ! -f "$GENERATED/sotto_core.swift" ]; then
+if [ ! -f "$GENERATED/dikto_core.swift" ]; then
     echo "Error: Swift bindings not found. Run: make generate-bindings"
     exit 1
 fi
@@ -30,14 +30,14 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS_DIR" "$CONTENTS/Resources"
 
 # Copy Info.plist
-cp "$ROOT/SottoApp/Resources/Info.plist" "$CONTENTS/Info.plist"
+cp "$ROOT/DiktoApp/Resources/Info.plist" "$CONTENTS/Info.plist"
 
 echo "Compiling Swift sources..."
 
 # Collect all swift source files
 SWIFT_FILES=(
-    "$GENERATED/sotto_core.swift"
-    "$SOURCES/SottoApp.swift"
+    "$GENERATED/dikto_core.swift"
+    "$SOURCES/DiktoApp.swift"
     "$SOURCES/AppState.swift"
     "$SOURCES/MenuBarView.swift"
     "$SOURCES/PermissionView.swift"
@@ -46,7 +46,7 @@ SWIFT_FILES=(
 )
 
 # The modulemap for the FFI C header
-MODULEMAP="$GENERATED/sotto_coreFFI.modulemap"
+MODULEMAP="$GENERATED/dikto_coreFFI.modulemap"
 
 SDK="$(xcrun --sdk macosx --show-sdk-path)"
 
@@ -69,7 +69,7 @@ swiftc \
     -Xlinker -framework -Xlinker Carbon \
     -framework AppKit \
     -framework SwiftUI \
-    -o "$MACOS_DIR/SottoApp" \
+    -o "$MACOS_DIR/DiktoApp" \
     "${SWIFT_FILES[@]}"
 
 # Remove extended attributes
@@ -89,7 +89,7 @@ fi
 
 codesign --force --sign "$IDENTITY" \
     --options runtime \
-    --entitlements "$ROOT/SottoApp/SottoApp.entitlements" \
+    --entitlements "$ROOT/DiktoApp/DiktoApp.entitlements" \
     "$APP_DIR"
 
 echo "Created: $APP_DIR"

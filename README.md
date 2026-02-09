@@ -1,4 +1,4 @@
-# sotto
+# dikto
 
 Voice-to-text for macOS. A menu-bar app that records speech and transcribes it locally using NVIDIA Parakeet TDT. Everything runs on your machine — no cloud APIs.
 
@@ -6,9 +6,9 @@ Voice-to-text for macOS. A menu-bar app that records speech and transcribes it l
 
 ## Architecture
 
-- **Rust core** (`sotto-core`) — audio capture, VAD, ASR engine, model management
-- **Swift UI** (`SottoApp`) — SwiftUI menu-bar app with recording overlay
-- **CLI** (`sotto-cli`) — headless model setup
+- **Rust core** (`dikto-core`) — audio capture, VAD, ASR engine, model management
+- **Swift UI** (`DiktoApp`) — SwiftUI menu-bar app with recording overlay
+- **CLI** (`dikto-cli`) — headless model setup
 
 ## Prerequisites
 
@@ -20,19 +20,19 @@ Voice-to-text for macOS. A menu-bar app that records speech and transcribes it l
 
 ```bash
 # Build the CLI and download a model
-cargo build --release --bin sotto
-./target/release/sotto --setup
+cargo build --release --bin dikto
+./target/release/dikto --setup
 
 # Build the app
 make build-app
 ```
 
-The setup command downloads the default model (~2.5 GB) to `~/.local/share/sotto/models/` and creates a config at `~/.config/sotto/config.json`.
+The setup command downloads the default model (~2.5 GB) to `~/.local/share/dikto/models/` and creates a config at `~/.config/dikto/config.json`.
 
 ## Usage
 
 ```bash
-open build/Sotto.app
+open build/Dikto.app
 ```
 
 Press **Option+R** to start recording. Speech is transcribed when you stop or silence is detected. The transcribed text is copied to your clipboard.
@@ -53,7 +53,7 @@ On first use, macOS will prompt you to grant microphone access in **System Setti
 To use a different model:
 
 ```bash
-sotto --setup --model whisper-small
+dikto --setup --model whisper-small
 ```
 
 Then select it in the app's Settings.

@@ -30,7 +30,7 @@ final class SettingsWindowController {
             defer: false
         )
         window.contentView = hosting
-        window.title = "Sotto Settings"
+        window.title = "Dikto Settings"
         window.isReleasedWhenClosed = false
         // This is the key: moveToActiveSpace prevents Space switching
         window.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
@@ -45,7 +45,7 @@ final class SettingsWindowController {
 }
 
 @main
-struct SottoApp: App {
+struct DiktoApp: App {
     @StateObject private var appState = AppState()
 
     var body: some Scene {

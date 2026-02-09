@@ -4,4 +4,4 @@ build/
 *.dSYM
 .build/
 temp/
-SottoApp/Generated/
+DiktoApp/Generated/
