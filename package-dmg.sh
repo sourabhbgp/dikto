@@ -16,7 +16,7 @@ if [ ! -d "$APP_DIR" ]; then
 fi
 
 # Extract version from Info.plist
-VERSION=$(defaults read "$APP_DIR/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "2.0.0")
+VERSION=$(defaults read "$APP_DIR/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "1.0.0")
 DMG_FINAL="$BUILD_DIR/Dikto-${VERSION}.dmg"
 
 echo "Creating DMG for Dikto v${VERSION}..."

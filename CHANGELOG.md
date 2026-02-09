@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-02-09
+## [1.0.0] - 2026-02-09
 
 ### Added
 - Complete rewrite: Rust core with UniFFI bindings to Swift macOS app
@@ -54,7 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Model file validation uses specific filenames instead of any `.bin`
 - NSAccessibilityUsageDescription added to Info.plist
 
-## [1.0.0] - 2025-01-01
+## Pre-1.0 History
 
-### Added
-- Initial release as "Sotto" — Python-based voice-to-text using Whisper
+- Originally released as "Sotto" (Python-based, 2025). Rewritten in Rust and renamed to Dikto.

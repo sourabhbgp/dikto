@@ -29,8 +29,29 @@ jobs:
       - name: Build app
         run: make build-app
 
+      - name: Build CLI binary
+        run: cargo build --release --bin dikto
+
       - name: Create DMG
         run: ./package-dmg.sh
+
+      - name: Get version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Package CLI binary
+        run: |
+          mkdir -p dist
+          cp target/release/dikto dist/
+          cd dist
+          tar czf "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" dikto
+
+      - name: Generate checksums
+        run: |
+          cd build
+          shasum -a 256 "Dikto-${{ steps.version.outputs.version }}.dmg" > "Dikto-${{ steps.version.outputs.version }}.dmg.sha256"
+          cd ../dist
+          shasum -a 256 "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" > "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256"
 
       # TODO: Add notarization step when Apple Developer credentials are available
       # - name: Notarize
@@ -38,15 +59,49 @@ jobs:
       #     DIKTO_NOTARIZE_PROFILE: dikto-notarize
       #   run: ./notarize.sh --dmg
 
-      - name: Get version
-        id: version
-        run: echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
             build/Dikto-${{ steps.version.outputs.version }}.dmg
-          generate_release_notes: true
+            build/Dikto-${{ steps.version.outputs.version }}.dmg.sha256
+            dist/dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz
+            dist/dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256
           draft: false
           prerelease: false
+          body: |
+            ## Install
+
+            ### Homebrew (recommended)
+
+            ```bash
+            brew tap sourabhbgp/dikto
+            # GUI app
+            brew install --cask dikto
+            # CLI only
+            brew install sourabhbgp/dikto/dikto
+            ```
+
+            ### Download DMG
+
+            1. Download `Dikto-${{ steps.version.outputs.version }}.dmg` below
+            2. Open the DMG and drag Dikto to Applications
+            3. Right-click Dikto.app → Open (bypasses Gatekeeper), or run:
+               ```
+               xattr -cr /Applications/Dikto.app
+               ```
+
+            ### Download CLI binary
+
+            ```bash
+            curl -LO https://github.com/sourabhbgp/dikto/releases/download/v${{ steps.version.outputs.version }}/dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz
+            tar xzf dikto-cli-*.tar.gz
+            sudo mv dikto /usr/local/bin/
+            ```
+
+            ### Verify checksums
+
+            ```bash
+            shasum -a 256 -c Dikto-${{ steps.version.outputs.version }}.dmg.sha256
+            shasum -a 256 -c dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256
+            ```

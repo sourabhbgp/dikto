@@ -663,7 +663,7 @@ dependencies = [
 
 [[package]]
 name = "dikto-cli"
-version = "2.0.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -679,7 +679,7 @@ dependencies = [
 
 [[package]]
 name = "dikto-core"
-version = "2.0.0"
+version = "1.0.0"
 dependencies = [
  "anyhow",
  "cpal",

@@ -29,7 +29,7 @@ for arg in "$@"; do
 done
 
 if [ "$TARGET" = "dmg" ]; then
-    VERSION=$(defaults read "$APP_DIR/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "2.0.0")
+    VERSION=$(defaults read "$APP_DIR/Contents/Info.plist" CFBundleShortVersionString 2>/dev/null || echo "1.0.0")
     SUBMIT_PATH="$BUILD_DIR/Dikto-${VERSION}.dmg"
     if [ ! -f "$SUBMIT_PATH" ]; then
         echo "Error: $SUBMIT_PATH not found. Run './package-dmg.sh' first."
