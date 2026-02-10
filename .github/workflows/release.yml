@@ -48,11 +48,16 @@ jobs:
           tar czf "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" dikto
 
       - name: Generate checksums
+        id: checksums
         run: |
           cd build
-          shasum -a 256 "Dikto-${{ steps.version.outputs.version }}.dmg" > "Dikto-${{ steps.version.outputs.version }}.dmg.sha256"
+          DMG_SHA=$(shasum -a 256 "Dikto-${{ steps.version.outputs.version }}.dmg" | awk '{print $1}')
+          echo "${DMG_SHA}  Dikto-${{ steps.version.outputs.version }}.dmg" > "Dikto-${{ steps.version.outputs.version }}.dmg.sha256"
+          echo "dmg_sha256=${DMG_SHA}" >> "$GITHUB_OUTPUT"
           cd ../dist
-          shasum -a 256 "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" > "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256"
+          CLI_SHA=$(shasum -a 256 "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" | awk '{print $1}')
+          echo "${CLI_SHA}  dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz" > "dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256"
+          echo "cli_sha256=${CLI_SHA}" >> "$GITHUB_OUTPUT"
 
       # TODO: Add notarization step when Apple Developer credentials are available
       # - name: Notarize
@@ -73,21 +78,27 @@ jobs:
           body: |
             ## Install
 
+            ### One-liner
+
+            ```bash
+            curl -fsSL https://diktoapp.github.io/dikto/install.sh | bash
+            ```
+
             ### Homebrew (recommended)
 
             ```bash
-            brew tap sourabhbgp/dikto
+            brew tap diktoapp/dikto
             # GUI app
             brew install --cask dikto
             # CLI only
-            brew install sourabhbgp/dikto/dikto
+            brew install diktoapp/dikto/dikto
             ```
 
             ### Download DMG
 
             1. Download `Dikto-${{ steps.version.outputs.version }}.dmg` below
             2. Open the DMG and drag Dikto to Applications
-            3. Right-click Dikto.app → Open (bypasses Gatekeeper), or run:
+            3. Right-click Dikto.app > Open (bypasses Gatekeeper), or run:
                ```
                xattr -cr /Applications/Dikto.app
                ```
@@ -95,7 +106,7 @@ jobs:
             ### Download CLI binary
 
             ```bash
-            curl -LO https://github.com/sourabhbgp/dikto/releases/download/v${{ steps.version.outputs.version }}/dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz
+            curl -LO https://github.com/diktoapp/dikto/releases/download/v${{ steps.version.outputs.version }}/dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz
             tar xzf dikto-cli-*.tar.gz
             sudo mv dikto /usr/local/bin/
             ```
@@ -106,3 +117,33 @@ jobs:
             shasum -a 256 -c Dikto-${{ steps.version.outputs.version }}.dmg.sha256
             shasum -a 256 -c dikto-cli-${{ steps.version.outputs.version }}-aarch64-apple-darwin.tar.gz.sha256
             ```
+
+      - name: Compute source tarball SHA256
+        id: source_sha
+        run: |
+          curl -fsSL "https://github.com/diktoapp/dikto/archive/refs/tags/v${{ steps.version.outputs.version }}.tar.gz" -o /tmp/source.tar.gz
+          SOURCE_SHA=$(shasum -a 256 /tmp/source.tar.gz | awk '{print $1}')
+          echo "source_sha256=${SOURCE_SHA}" >> "$GITHUB_OUTPUT"
+          rm /tmp/source.tar.gz
+
+      - name: Update Homebrew tap
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          if [ -z "${HOMEBREW_TAP_TOKEN}" ]; then
+            echo "::warning::HOMEBREW_TAP_TOKEN not set, skipping Homebrew tap update"
+            exit 0
+          fi
+          curl -fsSL -X POST \
+            -H "Authorization: token ${HOMEBREW_TAP_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/diktoapp/homebrew-dikto/dispatches" \
+            -d '{
+              "event_type": "update-tap",
+              "client_payload": {
+                "version": "${{ steps.version.outputs.version }}",
+                "dmg_sha256": "${{ steps.checksums.outputs.dmg_sha256 }}",
+                "source_sha256": "${{ steps.source_sha.outputs.source_sha256 }}"
+              }
+            }'

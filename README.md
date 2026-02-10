@@ -1,53 +1,49 @@
 # Dikto
 
-Voice-to-text for macOS. Records speech and transcribes it locally — no cloud APIs.
+Voice-to-text for macOS. Records speech, transcribes locally. No cloud.
 
 > macOS 14+ (Sonoma) &middot; Apple Silicon
 
-[![Build](https://github.com/sourabhbgp/dikto/actions/workflows/build.yml/badge.svg)](https://github.com/sourabhbgp/dikto/actions/workflows/build.yml)
-[![Test](https://github.com/sourabhbgp/dikto/actions/workflows/test.yml/badge.svg)](https://github.com/sourabhbgp/dikto/actions/workflows/test.yml)
+[![Build](https://github.com/diktoapp/dikto/actions/workflows/build.yml/badge.svg)](https://github.com/diktoapp/dikto/actions/workflows/build.yml)
+[![Test](https://github.com/diktoapp/dikto/actions/workflows/test.yml/badge.svg)](https://github.com/diktoapp/dikto/actions/workflows/test.yml)
+[![Release](https://img.shields.io/github/v/release/diktoapp/dikto)](https://github.com/diktoapp/dikto/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/diktoapp/dikto/total)](https://github.com/diktoapp/dikto/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-## Install
+## Quick Install
 
-### Homebrew (recommended)
+**One-liner** (downloads, verifies, installs, bypasses Gatekeeper):
 
 ```bash
-brew tap sourabhbgp/dikto
+curl -fsSL https://diktoapp.github.io/dikto/install.sh | bash
 ```
 
-**GUI app:**
+**Homebrew:**
 
 ```bash
+brew tap diktoapp/dikto
+# GUI app
 brew install --cask dikto
+# CLI only (builds from source)
+brew install diktoapp/dikto/dikto
 ```
 
-**CLI only** (builds from source):
+**DMG:** Download from [Releases](https://github.com/diktoapp/dikto/releases/latest).
 
-```bash
-brew install sourabhbgp/dikto/dikto
-```
+<details>
+<summary><strong>Gatekeeper: "Dikto can't be opened"</strong></summary>
 
-### GitHub Releases
+Dikto is ad-hoc signed but not Apple-notarized. The Homebrew and install-script methods bypass Gatekeeper automatically. If you downloaded the DMG directly:
 
-Download the latest DMG from [Releases](https://github.com/sourabhbgp/dikto/releases).
+1. **Right-click > Open:** Right-click Dikto.app, choose "Open", click "Open" in the dialog.
+2. **Terminal:** `xattr -cr /Applications/Dikto.app`
+3. **System Settings:** Privacy & Security > scroll down > "Open Anyway".
 
-Dikto is ad-hoc signed (not notarized). After installing, right-click the app and choose **Open**, or run:
+</details>
 
-```bash
-xattr -cr /Applications/Dikto.app
-```
+## Privacy
 
-### Build from source
-
-Prerequisites: [Rust](https://rustup.rs/) (1.75+), cmake (`brew install cmake`), macOS 14+.
-
-```bash
-git clone https://github.com/sourabhbgp/dikto.git
-cd dikto
-make build-app
-open build/Dikto.app
-```
+Your voice stays on your device. Dikto never connects to a server. All speech processing happens locally using on-device ML models. No accounts, no telemetry, no cloud APIs.
 
 ## Usage
 
@@ -81,6 +77,17 @@ Then select it in the app's Settings.
 - **CLI** (`dikto-cli`) — headless model setup
 
 Config: `~/.config/dikto/config.json` &middot; Models: `~/.local/share/dikto/models/`
+
+## Build from source
+
+Prerequisites: [Rust](https://rustup.rs/) (1.75+), cmake (`brew install cmake`), macOS 14+.
+
+```bash
+git clone https://github.com/diktoapp/dikto.git
+cd dikto
+make build-app
+open build/Dikto.app
+```
 
 ## License
 
