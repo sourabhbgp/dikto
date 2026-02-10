@@ -41,7 +41,7 @@ struct OnboardingView: View {
                 permissionCard(
                     icon: "accessibility",
                     title: "Accessibility",
-                    description: "Register global hotkey and auto-paste transcriptions.",
+                    description: "Auto-paste transcriptions into your active app.",
                     granted: axGranted
                 ) {
                     if !axGranted {

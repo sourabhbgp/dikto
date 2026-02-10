@@ -119,9 +119,6 @@ struct MenuBarView: View {
         .frame(width: 280)
         .onAppear {
             appState.accessibilityGranted = probeAccessibilityPermission()
-            if appState.needsOnboarding {
-                OnboardingWindowController.shared.show(appState: appState)
-            }
         }
     }
 

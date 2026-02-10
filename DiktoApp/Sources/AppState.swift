@@ -205,19 +205,24 @@ final class AppState: ObservableObject {
         let axOK = probeAccessibilityPermission()
         accessibilityGranted = axOK
 
-        if micOK && axOK {
-            setupGlobalShortcut()
-        } else {
+        // Always register the global hotkey — Carbon RegisterEventHotKey does
+        // NOT require Accessibility permission. Only CGEvent-based paste does.
+        setupGlobalShortcut()
+
+        if !micOK || !axOK {
             needsOnboarding = true
+            // Defer to after app finishes launching so NSWindow creation works
+            DispatchQueue.main.async { [weak self] in
+                guard let self, self.needsOnboarding else { return }
+                OnboardingWindowController.shared.show(appState: self)
+            }
         }
         setupMemoryPressureMonitor()
     }
 
     func onPermissionsGranted() {
         needsOnboarding = false
-        if hotKeyRef == nil {
-            setupGlobalShortcut()
-        }
+        accessibilityGranted = true
     }
 
     private func setupGlobalShortcut() {
