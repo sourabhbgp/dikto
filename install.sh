@@ -188,19 +188,19 @@ if [ "${CLI_ONLY}" = true ]; then
     success "Dikto CLI ${VERSION} installed to ${CLI_INSTALL_DIR}/dikto"
 
     # Summary
-    printf "\n"
-    printf "${BOLD}-------------------------------------------------------${RESET}\n"
-    printf "${BOLD}  Dikto CLI ${VERSION} installed successfully!${RESET}\n"
-    printf "${BOLD}-------------------------------------------------------${RESET}\n"
-    printf "\n"
-    printf "  Run ${BOLD}dikto --help${RESET} to get started.\n"
-    printf "\n"
-    printf "${BOLD}  First-run permissions:${RESET}\n"
-    printf "    1. ${YELLOW}Microphone${RESET}  - Grant access when prompted, or enable in\n"
-    printf "       System Settings > Privacy & Security > Microphone\n"
-    printf "    2. ${YELLOW}Accessibility${RESET} - Required for global keyboard shortcuts.\n"
-    printf "       System Settings > Privacy & Security > Accessibility\n"
-    printf "\n"
+    echo ""
+    echo "${BOLD}-------------------------------------------------------${RESET}"
+    echo "${BOLD}  Dikto CLI ${VERSION} installed successfully!${RESET}"
+    echo "${BOLD}-------------------------------------------------------${RESET}"
+    echo ""
+    echo "  Run ${BOLD}dikto --help${RESET} to get started."
+    echo ""
+    echo "${BOLD}  First-run permissions:${RESET}"
+    echo "    1. ${YELLOW}Microphone${RESET}  - Grant access when prompted, or enable in"
+    echo "       System Settings > Privacy & Security > Microphone"
+    echo "    2. ${YELLOW}Accessibility${RESET} - Required for global keyboard shortcuts."
+    echo "       System Settings > Privacy & Security > Accessibility"
+    echo ""
 
     exit 0
 fi
@@ -234,13 +234,13 @@ success "Checksum OK"
 
 # Mount DMG
 info "Mounting disk image..."
-MOUNT_OUTPUT="$(hdiutil attach -nobrowse -quiet "${TMPDIR_INSTALL}/${DMG_FILE}" 2>&1)" \
+MOUNT_OUTPUT="$(hdiutil attach -nobrowse "${TMPDIR_INSTALL}/${DMG_FILE}" 2>&1)" \
     || die "Failed to mount DMG: ${MOUNT_OUTPUT}"
 
-# Find the mount point (last column of the last line from hdiutil output)
-MOUNT_POINT="$(echo "${MOUNT_OUTPUT}" | tail -1 | awk -F'\t' '{print $NF}' | xargs)"
+# Find the mount point (/Volumes/... from the last line of hdiutil output)
+MOUNT_POINT="$(echo "${MOUNT_OUTPUT}" | grep -oE '/Volumes/.*' | tail -1 | sed 's/[[:space:]]*$//')"
 
-if [ ! -d "${MOUNT_POINT}" ]; then
+if [ -z "${MOUNT_POINT}" ] || [ ! -d "${MOUNT_POINT}" ]; then
     die "Could not determine DMG mount point."
 fi
 
@@ -274,19 +274,19 @@ success "Dikto ${VERSION} installed to ${INSTALL_DIR}/Dikto.app"
 # ---------------------------------------------------------------------------
 # Summary
 # ---------------------------------------------------------------------------
-printf "\n"
-printf "${BOLD}-------------------------------------------------------${RESET}\n"
-printf "${BOLD}  Dikto ${VERSION} installed successfully!${RESET}\n"
-printf "${BOLD}-------------------------------------------------------${RESET}\n"
-printf "\n"
-printf "  Open Dikto from your Applications folder or Spotlight.\n"
-printf "\n"
-printf "${BOLD}  First-run permissions (macOS will prompt you):${RESET}\n"
-printf "    1. ${YELLOW}Microphone${RESET}  - Required for voice-to-text.\n"
-printf "       System Settings > Privacy & Security > Microphone\n"
-printf "    2. ${YELLOW}Accessibility${RESET} - Required for global keyboard shortcuts\n"
-printf "       and text insertion.\n"
-printf "       System Settings > Privacy & Security > Accessibility\n"
-printf "\n"
-printf "  To uninstall, simply drag Dikto.app to the Trash.\n"
-printf "\n"
+echo ""
+echo "${BOLD}-------------------------------------------------------${RESET}"
+echo "${BOLD}  Dikto ${VERSION} installed successfully!${RESET}"
+echo "${BOLD}-------------------------------------------------------${RESET}"
+echo ""
+echo "  Open Dikto from your Applications folder or Spotlight."
+echo ""
+echo "${BOLD}  First-run permissions (macOS will prompt you):${RESET}"
+echo "    1. ${YELLOW}Microphone${RESET}  - Required for voice-to-text."
+echo "       System Settings > Privacy & Security > Microphone"
+echo "    2. ${YELLOW}Accessibility${RESET} - Required for global keyboard shortcuts"
+echo "       and text insertion."
+echo "       System Settings > Privacy & Security > Accessibility"
+echo ""
+echo "  To uninstall, simply drag Dikto.app to the Trash."
+echo ""
