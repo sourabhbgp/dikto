@@ -1,0 +1,125 @@
+name: Distribution Test
+
+on:
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+
+jobs:
+  test-install-script:
+    name: Test curl installer
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-14
+    steps:
+      - name: Run install script
+        run: |
+          curl -fsSL https://diktoapp.github.io/install.sh | bash
+
+      - name: Verify app installed
+        run: |
+          test -d /Applications/Dikto.app
+          echo "Dikto.app found in /Applications"
+
+      - name: Verify Gatekeeper cleared
+        run: |
+          # Should NOT have com.apple.quarantine attribute
+          if xattr /Applications/Dikto.app 2>/dev/null | grep -q quarantine; then
+            echo "::error::Quarantine attribute still present"
+            exit 1
+          fi
+          echo "No quarantine attribute — Gatekeeper bypassed"
+
+      - name: Verify app bundle structure
+        run: |
+          test -f /Applications/Dikto.app/Contents/Info.plist
+          test -f /Applications/Dikto.app/Contents/MacOS/Dikto
+          echo "App bundle structure OK"
+
+      - name: Clean up
+        if: always()
+        run: rm -rf /Applications/Dikto.app
+
+  test-homebrew-cask:
+    name: Test Homebrew cask
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-14
+    steps:
+      - name: Wait for Homebrew tap update
+        run: |
+          # Give the tap update workflow time to run
+          echo "Waiting 60s for Homebrew tap to update..."
+          sleep 60
+
+      - name: Tap and install
+        run: |
+          brew tap diktoapp/dikto
+          brew install --cask dikto
+
+      - name: Verify app installed
+        run: |
+          test -d /Applications/Dikto.app
+          echo "Dikto.app found in /Applications"
+
+      - name: Verify app bundle structure
+        run: |
+          test -f /Applications/Dikto.app/Contents/Info.plist
+          test -f /Applications/Dikto.app/Contents/MacOS/Dikto
+          echo "App bundle structure OK"
+
+      - name: Clean up
+        if: always()
+        run: |
+          brew uninstall --cask dikto 2>/dev/null || true
+          brew untap diktoapp/dikto 2>/dev/null || true
+
+  test-dmg-checksum:
+    name: Test DMG checksum
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: macos-14
+    steps:
+      - name: Get latest release version
+        id: version
+        run: |
+          TAG=$(curl -fsSL https://api.github.com/repos/diktoapp/dikto/releases/latest | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "Latest release: ${TAG}"
+
+      - name: Download DMG and checksum
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          BASE="https://github.com/diktoapp/dikto/releases/download/${TAG}"
+          curl -fSL --progress-bar "${BASE}/Dikto-${VERSION}.dmg" -o /tmp/Dikto-${VERSION}.dmg
+          curl -fsSL "${BASE}/Dikto-${VERSION}.dmg.sha256" -o /tmp/Dikto-${VERSION}.dmg.sha256
+
+      - name: Verify checksum
+        run: |
+          cd /tmp
+          shasum -a 256 -c "Dikto-${{ steps.version.outputs.version }}.dmg.sha256"
+          echo "DMG checksum verified"
+
+      - name: Mount and verify contents
+        run: |
+          MOUNT_OUTPUT=$(hdiutil attach -nobrowse /tmp/Dikto-${{ steps.version.outputs.version }}.dmg 2>&1)
+          MOUNT_POINT=$(echo "${MOUNT_OUTPUT}" | grep -oE '/Volumes/.*' | tail -1 | sed 's/[[:space:]]*$//')
+          test -d "${MOUNT_POINT}/Dikto.app"
+          test -f "${MOUNT_POINT}/Dikto.app/Contents/MacOS/Dikto"
+          echo "DMG contents verified at ${MOUNT_POINT}"
+          hdiutil detach "${MOUNT_POINT}" -quiet
+
+      - name: Download and verify CLI checksum
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          BASE="https://github.com/diktoapp/dikto/releases/download/${TAG}"
+          curl -fSL --progress-bar "${BASE}/dikto-cli-${VERSION}-aarch64-apple-darwin.tar.gz" -o /tmp/cli.tar.gz
+          curl -fsSL "${BASE}/dikto-cli-${VERSION}-aarch64-apple-darwin.tar.gz.sha256" -o /tmp/cli.sha256
+          cd /tmp
+          shasum -a 256 -c cli.sha256
+          echo "CLI checksum verified"
+
+      - name: Clean up
+        if: always()
+        run: rm -f /tmp/Dikto-*.dmg /tmp/Dikto-*.sha256 /tmp/cli.tar.gz /tmp/cli.sha256
