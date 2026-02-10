@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-10
+
+### Fixed
+- Hotkey not working without accessibility permission (Carbon RegisterEventHotKey doesn't require it)
+- Model download UI stuck on "Downloading..." after completion (callback lifetime bug)
+- Silent failure when pressing hotkey with no model downloaded
+- Onboarding text truncation ("Micropho...", "Not Gra...")
+- Onboarding window not closable
+
+### Added
+- Auto-switch to downloaded model when no model was previously active
+- "No model installed" banner in Settings > Models tab
+- "Skip for now" button on onboarding screen
+- Settings > Models tab opens automatically when hotkey pressed with no model
+
+### Changed
+- Onboarding accessibility description: "Auto-paste transcriptions into your active app" (was incorrectly mentioning hotkey)
+
 ## [1.0.0] - 2026-02-09
 
 ### Added
