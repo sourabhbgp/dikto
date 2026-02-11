@@ -88,7 +88,7 @@ fn default_true() -> bool {
 }
 
 fn default_global_shortcut() -> Option<String> {
-    Some("option+r".to_string())
+    Some("option+space".to_string())
 }
 
 impl Default for DiktoConfig {

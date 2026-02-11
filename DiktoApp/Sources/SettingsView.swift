@@ -215,28 +215,30 @@ struct GeneralSettingsView: View {
                     }
                 }
 
-                Section {
-                    LabeledContent("Max duration") {
-                        HStack(spacing: 8) {
-                            Slider(value: $maxDuration, in: 5...120, step: 5)
-                                .onChange(of: maxDuration) { guard loaded else { return }; saveSettings() }
-                                .frame(maxWidth: 160)
-                            Text("\(Int(maxDuration))s")
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                                .frame(width: 40, alignment: .trailing)
+                if activationMode == .toggle {
+                    Section {
+                        LabeledContent("Max duration") {
+                            HStack(spacing: 8) {
+                                Slider(value: $maxDuration, in: 5...120, step: 5)
+                                    .onChange(of: maxDuration) { guard loaded else { return }; saveSettings() }
+                                    .frame(maxWidth: 160)
+                                Text("\(Int(maxDuration))s")
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 40, alignment: .trailing)
+                            }
                         }
-                    }
 
-                    LabeledContent("Silence timeout") {
-                        HStack(spacing: 8) {
-                            Slider(value: $silenceDuration, in: 500...5000, step: 250)
-                                .onChange(of: silenceDuration) { guard loaded else { return }; saveSettings() }
-                                .frame(maxWidth: 160)
-                            Text(formatMs(Int(silenceDuration)))
-                                .monospacedDigit()
-                                .foregroundStyle(.secondary)
-                                .frame(width: 40, alignment: .trailing)
+                        LabeledContent("Silence timeout") {
+                            HStack(spacing: 8) {
+                                Slider(value: $silenceDuration, in: 500...5000, step: 250)
+                                    .onChange(of: silenceDuration) { guard loaded else { return }; saveSettings() }
+                                    .frame(maxWidth: 160)
+                                Text(formatMs(Int(silenceDuration)))
+                                    .monospacedDigit()
+                                    .foregroundStyle(.secondary)
+                                    .frame(width: 40, alignment: .trailing)
+                            }
                         }
                     }
                 }
