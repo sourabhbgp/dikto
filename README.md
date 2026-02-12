@@ -1,14 +1,21 @@
-# Dikto
-
-Voice-to-text for macOS. Records speech, transcribes locally. No cloud.
-
-> macOS 14+ (Sonoma) &middot; Apple Silicon
-
-[![Build](https://github.com/diktoapp/dikto/actions/workflows/build.yml/badge.svg)](https://github.com/diktoapp/dikto/actions/workflows/build.yml)
-[![Test](https://github.com/diktoapp/dikto/actions/workflows/test.yml/badge.svg)](https://github.com/diktoapp/dikto/actions/workflows/test.yml)
-[![Release](https://img.shields.io/github/v/release/diktoapp/dikto)](https://github.com/diktoapp/dikto/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/diktoapp/dikto/total)](https://github.com/diktoapp/dikto/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+<p align="center">
+  <img src="assets/dikto-icon.png" width="128" alt="Dikto">
+</p>
+<h1 align="center">Dikto</h1>
+<p align="center">Privacy-first voice-to-text for macOS. Records speech, transcribes locally. No cloud.</p>
+<p align="center">macOS 14+ (Sonoma) · Apple Silicon</p>
+<p align="center">
+  <a href="https://github.com/diktoapp/dikto/actions/workflows/build.yml"><img src="https://github.com/diktoapp/dikto/actions/workflows/build.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/diktoapp/dikto/actions/workflows/test.yml"><img src="https://github.com/diktoapp/dikto/actions/workflows/test.yml/badge.svg" alt="Test"></a>
+  <a href="https://github.com/diktoapp/dikto/releases/latest"><img src="https://img.shields.io/github/v/release/diktoapp/dikto" alt="Release"></a>
+  <a href="https://github.com/diktoapp/dikto/releases"><img src="https://img.shields.io/github/downloads/diktoapp/dikto/total" alt="Downloads"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
+</p>
+<p align="center">
+  <a href="https://diktoapp.github.io">Website</a> ·
+  <a href="https://github.com/diktoapp/dikto/releases/latest">Download</a> ·
+  <a href="#quick-install">Install</a>
+</p>
 
 ## Quick Install
 
@@ -47,7 +54,7 @@ Your voice stays on your device. Dikto never connects to a server. All speech pr
 
 ## Usage
 
-Press **Option+R** to start recording. Speech is transcribed when you stop or silence is detected. The text is copied to your clipboard and pasted into the active app.
+Press **Option+Space** to start recording. Speech is transcribed when you stop or silence is detected. The text is copied to your clipboard and pasted into the active app.
 
 On first launch, macOS will prompt for **Microphone** access. Grant **Accessibility** permission in System Settings for auto-paste.
 
