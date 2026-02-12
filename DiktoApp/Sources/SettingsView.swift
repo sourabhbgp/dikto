@@ -12,13 +12,27 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $appState.selectedSettingsTab) {
-                Label("General", systemImage: "gear")
-                    .tag(SettingsTab.general)
-                Label("Models", systemImage: "cpu")
-                    .tag(SettingsTab.models)
-                Label("Permissions", systemImage: "lock.shield")
-                    .tag(SettingsTab.permissions)
+            VStack(spacing: 0) {
+                VStack(spacing: Theme.Spacing.sm) {
+                    Image(nsImage: NSApp.applicationIconImage)
+                        .resizable()
+                        .frame(width: 64, height: 64)
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Text("Dikto")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
+                .padding(.top, Theme.Spacing.lg)
+                .padding(.bottom, Theme.Spacing.md)
+
+                List(selection: $appState.selectedSettingsTab) {
+                    Label("General", systemImage: "gear")
+                        .tag(SettingsTab.general)
+                    Label("Models", systemImage: "cpu")
+                        .tag(SettingsTab.models)
+                    Label("Permissions", systemImage: "lock.shield")
+                        .tag(SettingsTab.permissions)
+                }
             }
             .navigationSplitViewColumnWidth(Theme.Layout.sidebarWidth)
         } detail: {

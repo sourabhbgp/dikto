@@ -30,5 +30,7 @@
 	<string>Copyright 2026 Dikto contributors. MIT License.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Dikto needs microphone access to transcribe your speech to text.</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
 </dict>
 </plist>
