@@ -84,7 +84,7 @@ enum Theme {
         static let settingsMinHeight: CGFloat = 400
         static let sidebarWidth:      CGFloat = 220
         static let onboardingWidth:   CGFloat = 480
-        static let onboardingHeight:  CGFloat = 420
+        static let onboardingHeight:  CGFloat = 500
         static let overlayWidth:      CGFloat = 360
         static let overlayHeight:     CGFloat = 56
         static let recordingDotSize:  CGFloat = 10
