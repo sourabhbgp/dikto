@@ -50,5 +50,9 @@ Package.resolved
 .env
 .env.*
 
+# Local tools/scripts
+tools/
+CLAUDE.md
+
 # Logs
 *.log

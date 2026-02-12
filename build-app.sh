@@ -32,6 +32,9 @@ mkdir -p "$MACOS_DIR" "$CONTENTS/Resources"
 # Copy Info.plist
 cp "$ROOT/DiktoApp/Resources/Info.plist" "$CONTENTS/Info.plist"
 
+# Copy app icon
+cp "$ROOT/DiktoApp/Resources/AppIcon.icns" "$CONTENTS/Resources/AppIcon.icns"
+
 echo "Compiling Swift sources..."
 
 # Collect all swift source files
